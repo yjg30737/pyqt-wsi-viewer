@@ -13,3 +13,4 @@ PyQt WSI(Whole Slide Images) viewer
 
 ## See Also
 <a href="https://github.com/yjg30737/pyqt-dicom-viewer.git">pyqt-dicom-viewer</a>
+<a href="https://github.com/openslide/openslide-python">openslide-python</a>

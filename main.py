@@ -1,7 +1,9 @@
 import os
 
+from PyQt5.QtGui import QBrush, QColor
+
 from findPathWidget import FindPathWidget
-from script import get_dicom_image
+from script import get_dicom_image, censor_personal_information
 from slideView import SlideView
 
 # load openslide
@@ -66,13 +68,20 @@ class MainWindow(QMainWindow):
     def __find(self, filename):
         self.__slide, level_dimension, region, prop, tiles = get_dicom_image(filename)
 
+        prop = censor_personal_information(prop)
+
         items = prop.items()
+
         self.__tableWidget.clear()
         self.__tableWidget.setRowCount(len(items))
         i = 0
         for k, v in items:
-            self.__tableWidget.setItem(i, 0, QTableWidgetItem(k))
-            self.__tableWidget.setItem(i, 1, QTableWidgetItem(v))
+            k_item = QTableWidgetItem(k)
+            self.__tableWidget.setItem(i, 0, k_item)
+            v_item = QTableWidgetItem(v)
+            if v == 'CENSORED':
+                v_item.setForeground(QBrush(QColor(255, 0, 0)))
+            self.__tableWidget.setItem(i, 1, v_item)
             i += 1
 
         self.__sliderViewer.setSlide(self.__slide, level_dimension, region)

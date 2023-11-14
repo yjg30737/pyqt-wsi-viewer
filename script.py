@@ -1,4 +1,5 @@
 import os
+import pydicom
 
 # load openslide
 # The path can also be read from a config file, etc.
@@ -37,7 +38,7 @@ def get_slide(filename):
     # so we need to adjust if working with a different level
     region = slide.read_region((0, 0), level, level_dimension)
 
-    prop = slide.properties
+    prop = dict(slide.properties)
 
     return (slide, level_dimension, region, prop, tiles)
 
@@ -54,3 +55,17 @@ def get_slide(filename):
     # dicom_dict['type'] = 'wsi'
     # slide.get_thumbnail(size=(1200, 1200))
     # return dicom_dict
+
+
+def censor_personal_information(prop):
+    key_prop = ['dicom.StudyDate',
+     'dicom.PatientName',
+     'dicom.PatientID',
+     'dicom.PatientBirthDate',
+     'dicom.PatientSex']
+
+    for k, v in prop.items():
+        if k in key_prop:
+            prop[k] = 'CENSORED'
+
+    return prop

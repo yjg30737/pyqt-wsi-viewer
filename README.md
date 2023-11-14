@@ -1,6 +1,10 @@
 # pyqt-wsi-viewer
 PyQt WSI(Whole Slide Images) viewer
 
+This shows slide image of DICOM file (in normal size currently) which captured by scanner.
+
+Also this shows any metadata which DICOM file had with using QTableWidget, but it censored(de-identification) the personal information of patient. 
+
 ## Requirements
 * PyQt5>=5.14
 * openslide-python

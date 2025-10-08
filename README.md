@@ -1,4 +1,5 @@
 # pyqt-wsi-viewer
+<img width="946" height="809" alt="PyQt WSI Image Viewer2" src="https://github.com/user-attachments/assets/ceb03840-6a16-43f9-ba5e-6863f6f43e38" />
 
 ## Description
 A simple DCM viewer with annotation capabilities using PyQt6 and pyvips/openslide
@@ -30,3 +31,7 @@ https://www.kaggle.com/code/marcaubreville/first-steps-with-the-mitos-wsi-ccmct-
 3. python main.py
 4. Load DCM file
 ```
+
+## Preview
+https://github.com/user-attachments/assets/96e6fb73-f6be-463a-86f5-1395b804faf6
+

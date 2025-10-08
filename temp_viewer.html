@@ -1,0 +1,284 @@
+<!doctype html>
+<head>
+    <title>WSI Viewer</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 10px;
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+        }
+        
+        #controls {
+            margin-bottom: 10px;
+            text-align: center;
+        }
+        
+        .control-button {
+            padding: 10px 20px;
+            font-size: 16px;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 0 5px;
+            transition: background-color 0.3s ease;
+        }
+        
+        .control-button:disabled {
+            background-color: #6c757d;
+            cursor: not-allowed;
+        }
+        
+        #drawButton {
+            background-color: #007bff;
+        }
+        
+        #drawButton:hover {
+            background-color: #0056b3;
+        }
+        
+        #drawButton.active {
+            background-color: #28a745;
+        }
+        
+        #eraseButton {
+            background-color: #ffc107;
+        }
+        
+        #eraseButton:hover {
+            background-color: #e0a800;
+        }
+        
+        #eraseButton.active {
+            background-color: #fd7e14;
+        }
+        
+        #clearButton {
+            background-color: #dc3545;
+        }
+        
+        #clearButton:hover {
+            background-color: #c82333;
+        }
+        
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 20px;
+        }
+        
+        #openseadragon1 {
+            margin: 0 auto;
+            border: 2px solid #333;
+            border-radius: 5px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body>
+    <div id="controls">
+        <button id="drawButton" class="control-button" onclick="setDrawMode('draw')">Draw</button>
+        <button id="eraseButton" class="control-button" onclick="setDrawMode('erase')">Erase</button>
+        <button id="clearButton" class="control-button" onclick="clearAll()">Clear All</button>
+    </div>
+    <h1>WSI Image Viewer</h1>
+    <div id="openseadragon1" style="width: 1280px; height: 768px;"></div>
+    
+    <script src="openseadragon-bin-4.1.0/openseadragon.min.js"></script>
+    <script src="konva.min.js"></script>
+    <script type="text/javascript">
+        // Wait for all scripts to load
+        window.addEventListener('load', function() {
+            // Check if required libraries are loaded
+            if (typeof OpenSeadragon === 'undefined') {
+                console.error('OpenSeadragon library failed to load');
+                document.body.innerHTML = '<h1>Error: OpenSeadragon library not found</h1>';
+                return;
+            }
+            
+            if (typeof Konva === 'undefined') {
+                console.warn('Konva library failed to load - drawing functionality disabled');
+                document.getElementById('drawButton').style.display = 'none';
+                document.getElementById('eraseButton').style.display = 'none';
+                document.getElementById('clearButton').style.display = 'none';
+            }
+            
+            // Initialize OpenSeadragon viewer
+            var viewer = OpenSeadragon({
+                id: "openseadragon1",
+                prefixUrl: "openseadragon-bin-4.1.0/images/",
+                tileSources: "066c94c4c161224077a9.dzi",
+                showNavigationControl: true,
+                showHomeControl: true,
+                showFullPageControl: true,
+                showZoomControl: true,
+                mouseNavEnabled: true,
+                navigationControlAnchor: OpenSeadragon.ControlAnchor.TOP_LEFT
+            });
+
+            var isDrawing = false;
+            var drawingMode = 'none'; // 'none', 'draw', 'erase'
+            var drawingLayer = null;
+            
+            // Drawing mode functions
+            window.setDrawMode = function(mode) {
+                if (typeof Konva === 'undefined') {
+                    alert('Drawing functionality is not available. Konva library not loaded.');
+                    return;
+                }
+                
+                // Reset all button states
+                document.getElementById('drawButton').classList.remove('active');
+                document.getElementById('eraseButton').classList.remove('active');
+                
+                if (drawingMode === mode) {
+                    // Toggle off if same mode clicked
+                    drawingMode = 'none';
+                    viewer.setMouseNavEnabled(true);
+                } else {
+                    // Set new mode
+                    drawingMode = mode;
+                    
+                    if (mode === 'none') {
+                        viewer.setMouseNavEnabled(true);
+                    } else {
+                        viewer.setMouseNavEnabled(false);
+                        
+                        // Update button states
+                        if (mode === 'draw') {
+                            document.getElementById('drawButton').classList.add('active');
+                        } else if (mode === 'erase') {
+                            document.getElementById('eraseButton').classList.add('active');
+                        }
+                    }
+                }
+            };
+            
+            window.clearAll = function() {
+                if (typeof Konva === 'undefined') return;
+                if (drawingLayer) {
+                    if (confirm('Are you sure you want to clear all drawings?')) {
+                        drawingLayer.destroyChildren();
+                        drawingLayer.draw();
+                    }
+                }
+            };
+            
+            // Keyboard shortcuts
+            document.addEventListener('keydown', function(e) {
+                if (e.ctrlKey) {
+                    switch(e.key) {
+                        case 'd':
+                        case 'D':
+                            e.preventDefault();
+                            setDrawMode('draw');
+                            break;
+                        case 'e':
+                        case 'E':
+                            e.preventDefault();
+                            setDrawMode('erase');
+                            break;
+                        case 'Delete':
+                        case 'Backspace':
+                            e.preventDefault();
+                            clearAll();
+                            break;
+                    }
+                }
+                
+                // ESC to cancel current mode
+                if (e.key === 'Escape') {
+                    setDrawMode('none');
+                }
+            });
+
+            // Initialize drawing functionality when viewer is ready
+            viewer.addHandler('open', function() {
+                if (typeof Konva === 'undefined') return;
+                
+                var overlay = document.createElement('div');
+                overlay.style.position = "absolute";
+                overlay.style.left = 0;
+                overlay.style.top = 0;
+                overlay.style.width = "100%";
+                overlay.style.height = "100%";
+                overlay.style.pointerEvents = "none";
+
+                var stage = new Konva.Stage({
+                    container: overlay,
+                    width: viewer.viewport.getContainerSize().x,
+                    height: viewer.viewport.getContainerSize().y,
+                    opacity: 0.8
+                });
+
+                var layer = new Konva.Layer();
+                stage.add(layer);
+                drawingLayer = layer; // Store reference for clearing
+
+                var currentLine;
+                var isMouseDown = false;
+                
+                // Drawing event handlers
+                stage.on('mousedown touchstart', function (e) {
+                    if (drawingMode === 'none') return;
+                    
+                    isMouseDown = true;
+                    var pos = stage.getPointerPosition();
+                    
+                    if (drawingMode === 'draw') {
+                        currentLine = new Konva.Line({
+                            stroke: '#ff0000',
+                            strokeWidth: 3,
+                            globalCompositeOperation: 'source-over',
+                            lineCap: 'round',
+                            lineJoin: 'round',
+                            points: [pos.x, pos.y]
+                        });
+                        layer.add(currentLine);
+                    } else if (drawingMode === 'erase') {
+                        // Create eraser line with destination-out composite operation
+                        currentLine = new Konva.Line({
+                            stroke: 'rgba(0,0,0,1)',
+                            strokeWidth: 15,
+                            globalCompositeOperation: 'destination-out',
+                            lineCap: 'round',
+                            lineJoin: 'round',
+                            points: [pos.x, pos.y]
+                        });
+                        layer.add(currentLine);
+                    }
+                });
+
+                stage.on('mousemove touchmove', function (e) {
+                    if (drawingMode === 'none' || !currentLine || !isMouseDown) return;
+                    
+                    var pos = stage.getPointerPosition();
+                    var newPoints = currentLine.points().concat([pos.x, pos.y]);
+                    currentLine.points(newPoints);
+                    layer.batchDraw();
+                });
+
+                stage.on('mouseup touchend', function (e) {
+                    if (drawingMode === 'none') return;
+                    isMouseDown = false;
+                    currentLine = null;
+                });
+                
+                // Toggle pointer events based on drawing mode
+                setInterval(function() {
+                    overlay.style.pointerEvents = (drawingMode !== 'none') ? "auto" : "none";
+                }, 100);
+                
+                viewer.canvas.appendChild(overlay);
+            });
+            
+            // Handle viewer errors
+            viewer.addHandler('open-failed', function(event) {
+                console.error('Failed to open image:', event);
+                document.body.innerHTML = '<h1>Error: Failed to load image</h1><p>Please check if the DZI file exists and is accessible.</p>';
+            });
+        });
+    </script>
+</body>
+</html>

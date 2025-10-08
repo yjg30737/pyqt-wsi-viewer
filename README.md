@@ -1,20 +1,32 @@
 # pyqt-wsi-viewer
-PyQt WSI(Whole Slide Images) viewer
 
-This shows slide image of DICOM file (in normal size currently) which captured by scanner.
-
-Also this shows any metadata which DICOM file had with using QTableWidget, but it censored(de-identification) the personal information of patient. 
+## Description
+A simple DCM viewer with annotation capabilities using PyQt6 and pyvips/openslide
 
 ## Requirements
-* PyQt5>=5.14
-* openslide-python
+* pillow
+  * Required to use pyvips or openslide
+* pyvips
+  * Needed for processing large images
+* PyQt6
+  * For GUI
+* PyQt6-WebEngine
+  * Needed to use webview in PyQt6 
 
-## Preview
-![image](https://github.com/yjg30737/pyqt-wsi-viewer/assets/55078043/ad9d6031-e291-424a-b137-f300da0155ab)
+## File Description
+* main.py: Entry point of the application
+* html_templates.py: This will generate temp_viewer.html, which shows WSI file.
+* konva.min.js: Being used to draw annotation on WSI images (primitive)
+* openseadragon: Open-source JavaScript library for displaying high-resolution, zoomable images on the web
 
-## TODO
-* Zoom In, Zoom out, Moving from one to another in the picture with mouse
+## DCM file to test
+You can get DCM file here: 
+https://www.kaggle.com/code/marcaubreville/first-steps-with-the-mitos-wsi-ccmct-data-set/data
 
-## See Also
-* <a href="https://github.com/yjg30737/pyqt-dicom-viewer.git">pyqt-dicom-viewer</a>
-* <a href="https://github.com/openslide/openslide-python">openslide-python</a>
+## How to run
+```bash
+1. python -m venv venv
+2. pip install -r requirements.txt
+3. python main.py
+4. Load DCM file
+```
